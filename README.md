@@ -106,6 +106,29 @@ Bu kısıtlı ortama rağmen, komutlarınızı işlevsel kılmak için size sunu
     *   Komutunuzun hangi adımlardan geçtiğini, değişkenlerin anlık değerlerini veya potansiyel hata noktalarını anlamak için paha biçilmezdir.
     *   Log formatı genellikle şöyledir: `[PyCmd ID:X] Log mesajınız` (X, komutun veritabanı ID'sidir).
 
+### 🔩 Hangi "Kütüphaneler" Kullanılabilir? (Global Olarak Sağlananlar)
+
+Web arayüzünden yazdığınız Python kodlarında, `import` ifadesiyle harici veya standart Python kütüphanelerini doğrudan çağıramazsınız. Ancak, `bot_core/bot_runner.py` script'i, kodunuzun çalışacağı ortama bazı temel ve güvenli modül/objeleri **global değişkenler olarak** zaten dahil eder. Bu, o modülleri tekrar `import` etmenize gerek olmadığı anlamına gelir; doğrudan isimleriyle kullanabilirsiniz.
+
+**Şu Anda Kullanıma Hazır Olanlar (Doğrudan Kullanılabilir, `import` Gerekmez):**
+
+1.  **`event`**: Komutu tetikleyen Telegram olayıyla ilgili tüm bilgileri ve bazı temel metotları içerir (yukarıda detaylandırıldı).
+2.  **`reply`**: Asenkron bir fonksiyondur (`await reply("mesaj")`). Kullanıcının komutuna yanıt olarak yeni bir mesaj gönderir.
+3.  **`asyncio`**: Asenkron programlama için temel araçları sunar. En sık `await asyncio.sleep(saniye)` şeklinde bekleme/gecikme işlemleri için kullanılır.
+4.  **`print`**: Sunucu konsoluna log mesajları yazdırmak için standart Python `print` fonksiyonu gibi çalışır (yukarıda detaylandırıldı).
+
+**Kullanılamayanlar (Doğrudan `import` Edilemez veya Global Olarak Mevcut Değildir):**
+
+*   **`requests`**: HTTP istekleri yapmak için popüler bir kütüphane. Bu ortamda doğrudan kullanılamaz.
+*   **`datetime`**: Tarih ve saat işlemleri için standart Python modülü. Doğrudan kullanılamaz. `event.message.date` üzerinden gelen ham tarih bilgisi olabilir, ancak bunu formatlamak veya üzerinde karmaşık işlemler yapmak için `datetime` modülünün fonksiyonlarına erişemezsiniz.
+*   **`json`**: JSON verilerini işlemek için standart modül. Doğrudan kullanılamaz.
+*   **`random`**: Rastgele sayı üretimi veya seçimler için standart modül. Doğrudan kullanılamaz.
+*   **`math`**: Matematiksel fonksiyonlar için standart modül. Doğrudan kullanılamaz (temel aritmetik işlemler `+`, `-`, `*`, `/` çalışır).
+*   **Dosya İşlemleri (`open`, `os` vb.):** Güvenlik nedeniyle dosya sistemi işlemleri kesinlikle kısıtlıdır ve kullanılamaz.
+*   **Diğer Tüm Harici ve Çoğu Standart Kütüphane:** Genel kural, eğer `bot_runner.py` tarafından açıkça `exec_globals` içine eklenmemişse, hiçbir kütüphane veya modül kullanılamaz.
+
+**Özetle:** Komutlarınızı yazarken, sadece yukarıda "Kullanıma Hazır Olanlar" listesindeki araçlara ve `event` objesinin sunduğu bilgilere güvenerek mantık oluşturmanız gerekir. Eğer bir API'ye istek atmanız, karmaşık veri yapılarını (JSON gibi) işlemeniz veya rastgelelik eklemeniz gerekiyorsa, bu işlevselliğin `bot_core/commands/` altındaki "sabit komutlar" aracılığıyla veya `bot_runner.py` üzerinde yapılacak güvenli ve kontrollü güncellemelerle sağlanması daha uygun olacaktır.
+
 ### ✍️ Komut Yazarken Dikkat Edilmesi Gerekenler (Detaylı)
 
 1.  **`import` Kesinlikle Yok!** (Tekrar ve tekrar: `asyncio` hariç).
